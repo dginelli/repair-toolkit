@@ -1,6 +1,7 @@
 package it.unimib.repair;
 
 import it.unimib.repair_operator.ReplaceOperator;
+import it.unimib.repair_operator.ReplaceVariableOperator;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.reflect.code.CtArrayAccessImpl;
@@ -19,16 +20,16 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
 
     public boolean repairArrayInitialization(CtStatement ctStatement, String failingTestClass, String failingTestMethod, int failingTestsNumber) {
 
-        // 1) Get the elements associated with an array initialization
-        List<CtNewArrayImpl<?>> ctNewArrayList = ctStatement.getElements(new TypeFilter<>(CtNewArrayImpl.class));
+        // 1) Get the elements associated with an array initialization (CtNewArrayImpl<?> in Spoon)
+        List<CtNewArrayImpl<?>> ctNewArrayList = null;
 
         for (CtNewArrayImpl<?> ctNewArray : ctNewArrayList) {
 
-            // 2) Initialize a concrete Replace Operator
+            // 2) Initialize a concrete Replace Operator for array initialization
             ReplaceOperator replaceOperator = null;
 
             // 3) Get the ingredients for the operator
-            Set<String> ingredients = replaceOperator.getIngredients(ctNewArray, "int", null);
+            Set<String> ingredients = null;
 
             // 4) Use the ingredient to mutate the program
             for (String ingredient: ingredients) {
@@ -54,7 +55,7 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
         for (CtArrayAccessImpl<?,?> ctArrayAccess : ctArrayAccessList) {
 
             // 2) Initialize a concrete Replace Operator
-            ReplaceOperator replaceOperator = null; //
+            ReplaceOperator replaceOperator = new ReplaceVariableOperator(repairUtil.getLauncher());
 
             // 3) Get the ingredients for the operator
             Set<String> ingredients = replaceOperator.
@@ -63,14 +64,15 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
             // 4) Use the ingredient to mutate the program
             for (String ingredient: ingredients) {
                 // 5) Apply the change
-
+                replaceOperator.replace(ctArrayAccess.getIndexExpression(), ingredient);
                 // 6) Check if the program variant passes the failed test case
                 // without increasing the number of failed test
                 if (repairUtil.processVariant(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber)) {
                     return true;
                 } else {
                     // Undo the change if the program variant is not good
-                    // (i.e., the failed test case still fails or the number of failed tests increase)
+                    // (i.e., the failed test case still fails or the number of failed tests increases)
+                    replaceOperator.undoReplace(ctArrayAccess.getIndexExpression());
                 }
             }
         }
