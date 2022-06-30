@@ -1,5 +1,6 @@
 package it.unimib.repair;
 
+import it.unimib.repair_operator.ReplaceArrayInitializationExpressionOperator;
 import it.unimib.repair_operator.ReplaceOperator;
 import it.unimib.repair_operator.ReplaceVariableOperator;
 import spoon.reflect.code.CtStatement;
@@ -21,20 +22,20 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
     public boolean repairArrayInitialization(CtStatement ctStatement, String failingTestClass, String failingTestMethod, int failingTestsNumber) {
 
         // 1) Get the elements associated with an array initialization (CtNewArrayImpl<?> in Spoon)
-        List<CtNewArrayImpl<?>> ctNewArrayList = null;
+        List<CtNewArrayImpl<?>> ctNewArrayList = ctStatement.getElements(new TypeFilter<>(CtNewArrayImpl.class));
 
         for (CtNewArrayImpl<?> ctNewArray : ctNewArrayList) {
 
             // 2) Initialize a concrete Replace Operator for array initialization
-            ReplaceOperator replaceOperator = null;
+            ReplaceOperator replaceOperator = new ReplaceArrayInitializationExpressionOperator(repairUtil.getLauncher());
 
             // 3) Get the ingredients for the operator
-            Set<String> ingredients = null;
+            Set<String> ingredients = replaceOperator.getIngredients(ctNewArray, "int", null);
 
             // 4) Use the ingredient to mutate the program
             for (String ingredient: ingredients) {
                 // 5) Apply the change
-
+                replaceOperator.replace(ctNewArray, ingredient);
                 // 6) Check if the program variant passes the failed test case
                 // without increasing the number of failed test
                 if (repairUtil.processVariant(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber)) {
@@ -42,6 +43,7 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
                 } else {
                     // Undo the change if the program variant is not good
                     // (i.e., the failed test case still fails or the number of failed tests increase)
+                    replaceOperator.undoReplace(ctNewArray);
                 }
             }
         }
