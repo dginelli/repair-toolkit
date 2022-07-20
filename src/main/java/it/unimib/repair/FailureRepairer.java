@@ -96,7 +96,6 @@ public class FailureRepairer {
 
         // 1) This is the class that contains the suspicious statement
 
-
         // 2) Get the list of statements contained in the class
 
         // 3) Find the suspicious statement in the class (same line of suspiciousLocation)
