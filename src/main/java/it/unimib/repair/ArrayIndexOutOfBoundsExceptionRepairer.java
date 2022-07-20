@@ -2,7 +2,6 @@ package it.unimib.repair;
 
 import it.unimib.repair_operator.ReplaceArrayInitializationExpressionOperator;
 import it.unimib.repair_operator.ReplaceOperator;
-import it.unimib.repair_operator.ReplaceVariableOperator;
 import org.apache.log4j.Logger;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.visitor.filter.TypeFilter;
@@ -64,8 +63,8 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
         System.out.println(ctStatement);
         for (CtArrayAccessImpl<?,?> ctArrayAccess : ctArrayAccessList) {
 
-            // 2) Initialize a concrete Replace Operator
-            ReplaceOperator replaceOperator = new ReplaceVariableOperator(repairUtil.getLauncher());
+            // 2) Initialize a concrete Replace Operator (the operator you created for Exercise 5)
+            ReplaceOperator replaceOperator = null;
 
             // 3) Get the ingredients for the operator
             Set<String> ingredients = replaceOperator.
