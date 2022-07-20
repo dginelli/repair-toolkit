@@ -4,6 +4,8 @@ import it.unimib.fault_localization.FailureLocator;
 import it.unimib.model.FailureInfo;
 import it.unimib.model.RepairTarget;
 import it.unimib.repair.FailureRepairer;
+import org.apache.log4j.Logger;
+
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +13,8 @@ import java.util.Map;
  * RepairToolkit
  */
 public class App {
+
+    private static final Logger logger = Logger.getLogger(App.class);
 
     private static final String PROGRAM_SOURCE_CODE_PATH = "/Users/davide/Development/APR/library/src/main/java";
     private static final String PROGRAM_CLASSES_PATH = "/Users/davide/Development/APR/library/target/classes";
@@ -25,6 +29,11 @@ public class App {
 
         // 1) Get the map with <FailureInfo, List<RepairTarget>> using Except
         Map<FailureInfo, List<RepairTarget>> failureInfoListMap = failureLocator.getRepairTargets();
+
+        if (failureInfoListMap == null) {
+            logger.info("No suspicious locations have been found: it was not possible to create a patch");
+            System.exit(0);
+        }
 
         // 2) Use FailureRepairer to initialize the repair process
         FailureRepairer failureRepairer = new FailureRepairer(failureLocator.getFlacocoConfig(), PROGRAM_SOURCE_CODE_PATH);
@@ -50,9 +59,9 @@ public class App {
 
         // 7) If the number of test cases that fail is 0, it means that a possible patch has been generated
         if (failedTests == 0) {
-            System.out.println("A solution has been found");
+            logger.info("A solution has been found");
         } else {
-            System.out.println("No solutions have been found");
+            logger.info("No solutions have been found");
         }
     }
 }

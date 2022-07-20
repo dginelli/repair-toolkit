@@ -3,6 +3,7 @@ package it.unimib.repair;
 import it.unimib.repair_operator.ReplaceArrayInitializationExpressionOperator;
 import it.unimib.repair_operator.ReplaceOperator;
 import it.unimib.repair_operator.ReplaceVariableOperator;
+import org.apache.log4j.Logger;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.reflect.code.CtArrayAccessImpl;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.Set;
 
 public class ArrayIndexOutOfBoundsExceptionRepairer {
+
+    private final Logger logger = Logger.getLogger(ArrayIndexOutOfBoundsExceptionRepairer.class);
 
     private final RepairUtil repairUtil;
 
@@ -31,6 +34,11 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
 
             // 3) Get the ingredients for the operator
             Set<String> ingredients = replaceOperator.getIngredients(ctNewArray, "int", null);
+
+            if (ingredients == null) {
+                logger.info("No ingredients have been found");
+                return false;
+            }
 
             // 4) Use the ingredient to mutate the program
             for (String ingredient: ingredients) {
@@ -62,6 +70,11 @@ public class ArrayIndexOutOfBoundsExceptionRepairer {
             // 3) Get the ingredients for the operator
             Set<String> ingredients = replaceOperator.
                     getIngredients(ctArrayAccess, "int", ctArrayAccess.getIndexExpression().prettyprint());
+
+            if (ingredients == null) {
+                logger.info("No ingredients have been found");
+                return false;
+            }
 
             // 4) Use the ingredient to mutate the program
             for (String ingredient: ingredients) {
