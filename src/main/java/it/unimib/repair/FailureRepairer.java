@@ -80,8 +80,9 @@ public class FailureRepairer {
                 return arrayIndexOutOfBoundsExceptionRepairer.
                         repairArrayInitialization(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber);
             case ARRAY_INDEX_IS_WRONG:
-                return arrayIndexOutOfBoundsExceptionRepairer.
-                        repairArrayIndex(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber);
+                return false;
+                //return arrayIndexOutOfBoundsExceptionRepairer.
+                  //      repairArrayIndex(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber);
             default:
                 return false;
         }
