@@ -5,15 +5,14 @@ import it.unimib.model.RepairTarget;
 import it.unimib.model.SuspiciousLocation;
 
 import it.unimib.validator.PatchInfoWriter;
-import org.apache.log4j.Logger;
 import spoon.Launcher;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.List;
 
 public class FailureRepairer {
-
-    private final Logger logger = Logger.getLogger(FailureRepairer.class);
 
     private static final String OUTPUT = "./output";
 
@@ -39,17 +38,9 @@ public class FailureRepairer {
      * @param failedTests the number of failed tests
      * @return true if the program variant fixed the failed test without increasing the number of failed tests
      */
-    public boolean repair(List<RepairTarget> repairTargetList, String failingTestClass,
-                          String failingTestMethod, int failedTests) {
-
+    public boolean repair(List<RepairTarget> repairTargetList, String failingTestClass, String failingTestMethod, int failedTests) {
         for (RepairTarget repairTarget : repairTargetList) {
             CtStatement ctStatement = getSuspiciousStatement(repairTarget.getSuspiciousLocation());
-
-            if (ctStatement == null) {
-                logger.info("The statement associated with the RepairTarget has not been found");
-                return false;
-            }
-
             boolean result = generateVariant(repairTarget, ctStatement, failingTestClass, failingTestMethod, failedTests);
 
             if (result) {
@@ -70,19 +61,14 @@ public class FailureRepairer {
      * @param failingTestsNumber the number of failed test cases
      * @return true if the program variant fixed the failed test without increasing the number of failed tests
      */
-    private boolean generateVariant(RepairTarget repairTarget, CtStatement ctStatement, String failingTestClass,
-                                    String failingTestMethod, int failingTestsNumber) {
-
+    private boolean generateVariant(RepairTarget repairTarget, CtStatement ctStatement, String failingTestClass, String failingTestMethod, int failingTestsNumber) {
         ArrayIndexOutOfBoundsExceptionRepairer arrayIndexOutOfBoundsExceptionRepairer =
                 new ArrayIndexOutOfBoundsExceptionRepairer(repairUtil);
         switch (repairTarget.getGuessedFault()) {
             case ARRAY_INDEX_INITIALIZATION_IS_WRONG:
-                return arrayIndexOutOfBoundsExceptionRepairer.
-                        repairArrayInitialization(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber);
+                return arrayIndexOutOfBoundsExceptionRepairer.repairArrayInitialization(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber);
             case ARRAY_INDEX_IS_WRONG:
-                return false;
-                //return arrayIndexOutOfBoundsExceptionRepairer.
-                  //      repairArrayIndex(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber);
+                return arrayIndexOutOfBoundsExceptionRepairer.repairArrayIndex(ctStatement, failingTestClass, failingTestMethod, failingTestsNumber);
             default:
                 return false;
         }
@@ -95,12 +81,22 @@ public class FailureRepairer {
      */
     public CtStatement getSuspiciousStatement(SuspiciousLocation suspiciousLocation) {
 
-        // 1) This is the class that contains the suspicious statement
+        // This is the class that contains the suspicious statement
+        CtClass<?> ctClass = launcher.getFactory().Class().get(suspiciousLocation.getClassName());
 
-        // 2) Get the list of statements contained in the class
+        // Get the list of statements contained in the class
+        List<CtStatement> classStatementList = ctClass.getElements(new TypeFilter<>(CtStatement.class));
 
-        // 3) Find the suspicious statement in the class (same line of suspiciousLocation)
-
+        // Find the suspicious statement in the class
+        for (CtStatement ctStatement : classStatementList) {
+            try {
+                // Check if the statement is equal to the one associated with the SuspiciousLocation
+                if (ctStatement.getPosition().getLine() == suspiciousLocation.getLineNumber()) {
+                    return ctStatement;
+                }
+            } catch (UnsupportedOperationException ignored) {
+            }
+        }
         return null;
     }
 }

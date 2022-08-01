@@ -1,6 +1,8 @@
 package it.unimib.fault_localization;
 
 import fr.spoonlabs.flacoco.core.config.FlacocoConfig;
+import it.unimib.failure_locator.TestCasesExecutor;
+import it.unimib.generator.RepairTargetGenerator;
 import it.unimib.model.FailureInfo;
 import it.unimib.model.RepairTarget;
 
@@ -24,18 +26,13 @@ public class FailureLocator {
     }
 
     public Map<FailureInfo, List<RepairTarget>> getRepairTargets() {
+        TestCasesExecutor testCasesExecutor = new TestCasesExecutor(programSourceCodePath, programClassesPath,
+                testsSourceCodePath, testsClassesPath, null);
+        List<FailureInfo> failuresInformationList = testCasesExecutor.getFailuresInformation();
+        this.flacocoConfig = testCasesExecutor.getFlacocoConfig();
+        this.failedTests = testCasesExecutor.getFlacocoResult().getFailingTests().size();
 
-        // 1) Create a TestCaseExecutor
-
-        // 2) Get the list of FailureInfo objects
-
-        // 3) Get Flacoco configuration
-
-        // 4) Get the number of failed tests
-
-        // 5) Generate the list of RepairTarget objects and return the Map<FailureInfo, List<RepairTarget>>
-
-        return null;
+        return RepairTargetGenerator.getRepairTargets(failuresInformationList, programSourceCodePath);
     }
 
     public FlacocoConfig getFlacocoConfig() {
